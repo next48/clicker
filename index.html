@@ -3,70 +3,88 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR без маркеров</title>
+  <title>AR с Яндекс.AR</title>
   <style>
     body {
       margin: 0;
       overflow: hidden;
+      font-family: Arial, sans-serif;
     }
     #ar-container {
       width: 100%;
       height: 100vh;
+      display: none; /* Скрываем контейнер до запуска AR */
+    }
+    #start-button {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 15px 30px;
+      font-size: 18px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    #start-button:hover {
+      background-color: #0056b3;
     }
   </style>
 </head>
 <body>
+  <button id="start-button">Запустить AR</button>
   <div id="ar-container"></div>
 
-  <!-- Подключаем Three.js и WebXR полифилл -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/webxr-polyfill@latest/build/webxr-polyfill.min.js"></script>
-
+  <!-- Подключаем Яндекс.AR -->
+  <script src="https://yastatic.net/s3/web4s/_/yv2-F9gR7QJk.js"></script>
   <script>
-    // Инициализация сцены, камеры и рендерера
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.getElementById('ar-container').appendChild(renderer.domElement);
+    // Инициализация AR
+    let arSession;
 
-    // Добавляем куб
-    const geometry = new THREE.BoxGeometry(1, 1, 1);
-    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const cube = new THREE.Mesh(geometry, material);
-    cube.position.set(0, 0, -2); // Позиция куба
-    scene.add(cube);
+    // Функция для запуска AR
+    async function startAR() {
+      const container = document.getElementById('ar-container');
+      const startButton = document.getElementById('start-button');
 
-    // Настройка WebXR
-    renderer.xr.enabled = true; // Включаем поддержку WebXR
-    const controller = renderer.xr.getController(0); // Получаем контроллер
-    scene.add(controller);
-
-    // Функция для запуска AR-сессии
-    async function startARSession() {
-      if (navigator.xr) {
-        const session = await navigator.xr.requestSession('immersive-ar', {
-          requiredFeatures: ['local'], // Используем ARCore/ARKit
-        });
-        renderer.xr.setSession(session);
-      } else {
-        alert('Ваше устройство или браузер не поддерживают WebXR.');
+      // Проверяем поддержку AR
+      if (!YaAR.isARSupported()) {
+        alert('Ваше устройство не поддерживает AR.');
+        return;
       }
+
+      // Скрываем кнопку и показываем контейнер
+      startButton.style.display = 'none';
+      container.style.display = 'block';
+
+      // Инициализация AR-сессии
+      arSession = await YaAR.init({
+        container: container,
+        mode: YaAR.Mode.AR,
+      });
+
+      // Создаем 3D-куб
+      const cubeGeometry = new YaAR.Geometry.Box(1, 1, 1);
+      const cubeMaterial = new YaAR.Material({ color: '#00ff00' });
+      const cube = new YaAR.Mesh(cubeGeometry, cubeMaterial);
+      cube.position.set(0, 0, -2); // Позиция куба
+
+      // Добавляем куб на сцену
+      arSession.scene.add(cube);
+
+      // Запускаем анимацию
+      function animate() {
+        requestAnimationFrame(animate);
+        cube.rotation.x += 0.01;
+        cube.rotation.y += 0.01;
+        arSession.renderer.render(arSession.scene, arSession.camera);
+      }
+      animate();
     }
 
-    // Запуск AR-сессии при клике
-    document.body.addEventListener('click', () => {
-      startARSession();
-    });
-
-    // Анимация
-    function animate() {
-      requestAnimationFrame(animate);
-      cube.rotation.x += 0.01;
-      cube.rotation.y += 0.01;
-      renderer.render(scene, camera);
-    }
-    animate();
+    // Назначаем обработчик на кнопку
+    document.getElementById('start-button').addEventListener('click', startAR);
   </script>
 </body>
 </html>
