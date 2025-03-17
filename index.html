@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR с Яндекс.AR</title>
+  <title>AR с WebXR</title>
   <style>
     body {
       margin: 0;
@@ -48,8 +48,8 @@
   <div id="ar-container"></div>
   <div id="status">Статус: Ожидание...</div>
 
-  <!-- Подключаем Яндекс.AR -->
-  <script src="https://yastatic.net/s3/web4s/_/yv2-F9gR7QJk.js"></script>
+  <!-- Подключаем Three.js -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
   <script>
     // Элементы интерфейса
     const container = document.getElementById('ar-container');
@@ -61,52 +61,59 @@
       status.textContent = `Статус: ${message}`;
     }
 
+    // Инициализация Three.js
+    let scene, camera, renderer, cube;
+
+    function initThreeJS() {
+      // Сцена
+      scene = new THREE.Scene();
+
+      // Камера
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+      // Рендерер
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      container.appendChild(renderer.domElement);
+
+      // Куб
+      const geometry = new THREE.BoxGeometry(1, 1, 1);
+      const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+      cube = new THREE.Mesh(geometry, material);
+      cube.position.set(0, 0, -2); // Позиция куба
+      scene.add(cube);
+    }
+
     // Функция для запуска AR
     async function startAR() {
-      updateStatus("Проверка поддержки AR...");
+      updateStatus("Проверка поддержки WebXR...");
 
-      // Проверяем поддержку AR
-      if (!YaAR.isARSupported()) {
-        updateStatus("AR не поддерживается на вашем устройстве.");
+      // Проверяем поддержку WebXR
+      if (!navigator.xr) {
+        updateStatus("WebXR не поддерживается вашим браузером.");
         return;
       }
 
-      updateStatus("AR поддерживается. Инициализация...");
+      updateStatus("WebXR поддерживается. Запуск AR...");
 
-      // Скрываем кнопку и показываем контейнер
-      startButton.style.display = 'none';
-      container.style.display = 'block';
+      // Инициализация Three.js
+      initThreeJS();
 
-      try {
-        // Инициализация AR-сессии
-        const arSession = await YaAR.init({
-          container: container,
-          mode: YaAR.Mode.AR,
-        });
+      // Запрашиваем AR-сессию
+      const session = await navigator.xr.requestSession('immersive-ar');
+      renderer.xr.enabled = true;
+      renderer.xr.setSession(session);
 
-        updateStatus("AR сессия запущена.");
+      updateStatus("AR сессия запущена. Наведите камеру на поверхность.");
 
-        // Создаем 3D-куб
-        const cubeGeometry = new YaAR.Geometry.Box(1, 1, 1);
-        const cubeMaterial = new YaAR.Material({ color: '#00ff00' });
-        const cube = new YaAR.Mesh(cubeGeometry, cubeMaterial);
-        cube.position.set(0, 0, -2); // Позиция куба
-
-        // Добавляем куб на сцену
-        arSession.scene.add(cube);
-
-        // Запускаем анимацию
-        function animate() {
-          requestAnimationFrame(animate);
-          cube.rotation.x += 0.01;
-          cube.rotation.y += 0.01;
-          arSession.renderer.render(arSession.scene, arSession.camera);
-        }
-        animate();
-      } catch (error) {
-        updateStatus(`Ошибка: ${error.message}`);
-        console.error(error);
+      // Анимация
+      function animate() {
+        requestAnimationFrame(animate);
+        cube.rotation.x += 0.01;
+        cube.rotation.y += 0.01;
+        renderer.render(scene, camera);
       }
+      animate();
     }
 
     // Назначаем обработчик на кнопку
