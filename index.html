@@ -1,131 +1,23 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR с WebXR</title>
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      font-family: Arial, sans-serif;
-    }
-    #ar-container {
-      width: 100%;
-      height: 100vh;
-      display: none; /* Скрываем контейнер до запуска AR */
-    }
-    #start-button {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 15px 30px;
-      font-size: 18px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    #start-button:hover {
-      background-color: #0056b3;
-    }
-    #status {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      color: white;
-      background-color: rgba(0, 0, 0, 0.7);
-      padding: 10px;
-      border-radius: 5px;
-      font-size: 14px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR Cube</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ar.js@1.7.2/aframe-ar.min.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; }
+    </style>
 </head>
 <body>
-  <button id="start-button">Запустить AR</button>
-  <div id="ar-container"></div>
-  <div id="status">Статус: Ожидание...</div>
-
-  <!-- Подключаем Three.js -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
-  <script>
-    // Элементы интерфейса
-    const container = document.getElementById('ar-container');
-    const startButton = document.getElementById('start-button');
-    const status = document.getElementById('status');
-
-    // Функция для обновления статуса
-    function updateStatus(message) {
-      status.textContent = `Статус: ${message}`;
-    }
-
-    // Инициализация Three.js
-    let scene, camera, renderer, cube;
-
-    function initThreeJS() {
-      // Сцена
-      scene = new THREE.Scene();
-
-      // Камера
-      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-
-      // Рендерер
-      renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      container.appendChild(renderer.domElement);
-
-      // Куб
-      const geometry = new THREE.BoxGeometry(1, 1, 1);
-      const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-      cube = new THREE.Mesh(geometry, material);
-      cube.position.set(0, 0, -2); // Позиция куба
-      scene.add(cube);
-    }
-
-    // Функция для запуска AR
-    async function startAR() {
-      updateStatus("Проверка поддержки WebXR...");
-
-      // Проверяем поддержку WebXR
-      if (!navigator.xr) {
-        updateStatus("WebXR не поддерживается вашим браузером.");
-        return;
-      }
-
-      updateStatus("WebXR поддерживается. Запуск AR...");
-
-      // Инициализация Three.js
-      initThreeJS();
-
-      // Запрашиваем AR-сессию
-      const session = await navigator.xr.requestSession('immersive-ar');
-      renderer.xr.enabled = true;
-      renderer.xr.setSession(session);
-
-      updateStatus("AR сессия запущена. Наведите камеру на поверхность.");
-
-      // Анимация
-      function animate() {
-        requestAnimationFrame(animate);
-        cube.rotation.x += 0.01;
-        cube.rotation.y += 0.01;
-        renderer.render(scene, camera);
-      }
-      animate();
-    }
-
-    // Назначаем обработчик на кнопку
-    startButton.addEventListener('click', startAR);
-
-    // Проверка поддержки WebXR при загрузке страницы
-    if (!navigator.xr) {
-      updateStatus("WebXR не поддерживается вашим браузером.");
-      startButton.disabled = true;
-    } else {
-      updateStatus("Готово к запуску AR.");
-    }
-  </script>
+    <a-scene embedded arjs>
+        <!-- Камера AR -->
+        <a-marker preset="hiro">
+            <!-- Белый куб -->
+            <a-box position="0 0.5 0" material="color: white;"></a-box>
+        </a-marker>
+        <a-entity camera></a-entity>
+    </a-scene>
 </body>
 </html>
