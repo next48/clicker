@@ -31,60 +31,94 @@
     #start-button:hover {
       background-color: #0056b3;
     }
+    #status {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      color: white;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
   <button id="start-button">Запустить AR</button>
   <div id="ar-container"></div>
+  <div id="status">Статус: Ожидание...</div>
 
   <!-- Подключаем Яндекс.AR -->
   <script src="https://yastatic.net/s3/web4s/_/yv2-F9gR7QJk.js"></script>
   <script>
-    // Инициализация AR
-    let arSession;
+    // Элементы интерфейса
+    const container = document.getElementById('ar-container');
+    const startButton = document.getElementById('start-button');
+    const status = document.getElementById('status');
+
+    // Функция для обновления статуса
+    function updateStatus(message) {
+      status.textContent = `Статус: ${message}`;
+    }
 
     // Функция для запуска AR
     async function startAR() {
-      const container = document.getElementById('ar-container');
-      const startButton = document.getElementById('start-button');
+      updateStatus("Проверка поддержки AR...");
 
       // Проверяем поддержку AR
       if (!YaAR.isARSupported()) {
-        alert('Ваше устройство не поддерживает AR.');
+        updateStatus("AR не поддерживается на вашем устройстве.");
         return;
       }
+
+      updateStatus("AR поддерживается. Инициализация...");
 
       // Скрываем кнопку и показываем контейнер
       startButton.style.display = 'none';
       container.style.display = 'block';
 
-      // Инициализация AR-сессии
-      arSession = await YaAR.init({
-        container: container,
-        mode: YaAR.Mode.AR,
-      });
+      try {
+        // Инициализация AR-сессии
+        const arSession = await YaAR.init({
+          container: container,
+          mode: YaAR.Mode.AR,
+        });
 
-      // Создаем 3D-куб
-      const cubeGeometry = new YaAR.Geometry.Box(1, 1, 1);
-      const cubeMaterial = new YaAR.Material({ color: '#00ff00' });
-      const cube = new YaAR.Mesh(cubeGeometry, cubeMaterial);
-      cube.position.set(0, 0, -2); // Позиция куба
+        updateStatus("AR сессия запущена.");
 
-      // Добавляем куб на сцену
-      arSession.scene.add(cube);
+        // Создаем 3D-куб
+        const cubeGeometry = new YaAR.Geometry.Box(1, 1, 1);
+        const cubeMaterial = new YaAR.Material({ color: '#00ff00' });
+        const cube = new YaAR.Mesh(cubeGeometry, cubeMaterial);
+        cube.position.set(0, 0, -2); // Позиция куба
 
-      // Запускаем анимацию
-      function animate() {
-        requestAnimationFrame(animate);
-        cube.rotation.x += 0.01;
-        cube.rotation.y += 0.01;
-        arSession.renderer.render(arSession.scene, arSession.camera);
+        // Добавляем куб на сцену
+        arSession.scene.add(cube);
+
+        // Запускаем анимацию
+        function animate() {
+          requestAnimationFrame(animate);
+          cube.rotation.x += 0.01;
+          cube.rotation.y += 0.01;
+          arSession.renderer.render(arSession.scene, arSession.camera);
+        }
+        animate();
+      } catch (error) {
+        updateStatus(`Ошибка: ${error.message}`);
+        console.error(error);
       }
-      animate();
     }
 
     // Назначаем обработчик на кнопку
-    document.getElementById('start-button').addEventListener('click', startAR);
+    startButton.addEventListener('click', startAR);
+
+    // Проверка поддержки WebXR при загрузке страницы
+    if (!navigator.xr) {
+      updateStatus("WebXR не поддерживается вашим браузером.");
+      startButton.disabled = true;
+    } else {
+      updateStatus("Готово к запуску AR.");
+    }
   </script>
 </body>
 </html>
