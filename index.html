@@ -3,403 +3,70 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Кликер Игра</title>
+  <title>AR без маркеров</title>
   <style>
-    /* Стили (CSS) */
     body {
-      font-family: Arial, sans-serif;
       margin: 0;
-      padding: 0;
-      background-color: #1e1e1e;
-      color: #fff;
-      text-align: center;
-    }
-
-    header {
-      background-color: #333;
-      padding: 20px;
-      position: relative;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 2.5em;
-    }
-
-    .player-name {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      font-size: 1.2em;
-    }
-
-    .container {
-      padding: 20px;
-    }
-
-    .click-area {
-      margin: 20px auto;
-      width: 200px;
-      height: 200px;
-      background-color: #444;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      user-select: none;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-      transition: background-color 0.3s, box-shadow 0.3s;
-    }
-
-    .click-area:active {
-      transform: scale(0.95);
-    }
-
-    .click-effect {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      border: 5px solid rgba(255, 255, 255, 0.7);
-      border-radius: 50%;
-      animation: clickAnimation 0.5s ease-out;
-      box-sizing: border-box;
-    }
-
-    @keyframes clickAnimation {
-      0% {
-        transform: scale(0);
-        opacity: 1;
-      }
-      100% {
-        transform: scale(1);
-        opacity: 0;
-      }
-    }
-
-    .score {
-      font-size: 2em;
-      margin: 20px 0;
-    }
-
-    .upgrades {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .upgrade {
-      background-color: #555;
-      padding: 10px;
-      border-radius: 5px;
-      cursor: pointer;
-      user-select: none;
-      transition: transform 0.2s, opacity 0.2s;
-      position: relative;
       overflow: hidden;
     }
-
-    .upgrade:hover {
-      background-color: #666;
-    }
-
-    .upgrade:active {
-      transform: scale(0.95);
-    }
-
-    .upgrade-bought {
-      opacity: 0.5;
-      pointer-events: none;
-    }
-
-    .upgrade-effect {
-      position: absolute;
+    #ar-container {
       width: 100%;
-      height: 100%;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.5), transparent 70%);
-      animation: upgradeAnimation 0.5s ease-out;
-    }
-
-    @keyframes upgradeAnimation {
-      0% {
-        transform: scale(0);
-        opacity: 1;
-      }
-      100% {
-        transform: scale(3);
-        opacity: 0;
-      }
-    }
-
-    .customization {
-      margin-top: 20px;
-    }
-
-    .customization h2 {
-      margin-bottom: 10px;
-    }
-
-    .skins {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .skin {
-      background-color: #555;
-      padding: 10px;
-      border-radius: 5px;
-      cursor: pointer;
-      user-select: none;
-      transition: transform 0.2s, opacity 0.2s;
-    }
-
-    .skin:hover {
-      background-color: #666;
-    }
-
-    .skin:active {
-      transform: scale(0.95);
-    }
-
-    .skin-bought {
-      opacity: 0.5;
-      pointer-events: none;
-    }
-
-    .leaderboard {
-      margin-top: 40px;
-      background-color: #333;
-      padding: 20px;
-      border-radius: 10px;
-      display: inline-block;
-    }
-
-    .leaderboard h2 {
-      margin-top: 0;
-    }
-
-    .leaderboard ol {
-      text-align: left;
-      padding-left: 20px;
+      height: 100vh;
     }
   </style>
 </head>
 <body>
-  <!-- HTML-структура -->
-  <header>
-    <h1>Кликер Игра</h1>
-    <div class="player-name" id="player-name"></div>
-  </header>
+  <div id="ar-container"></div>
 
-  <div class="container">
-    <div class="click-area" id="click-area">
-      <span>Кликни!</span>
-    </div>
-
-    <div class="score">
-      Очки: <span id="score">0</span>
-    </div>
-
-    <div class="upgrades">
-      <div class="upgrade" data-cost="10" data-increment="1">
-        Улучшение 1 (+1/сек) - 10 очков
-      </div>
-      <div class="upgrade" data-cost="50" data-increment="5">
-        Улучшение 2 (+5/сек) - 50 очков
-      </div>
-      <div class="upgrade" data-cost="100" data-increment="10">
-        Улучшение 3 (+10/сек) - 100 очков
-      </div>
-      <div class="upgrade" data-cost="200" data-increment="20">
-        Улучшение 4 (+20/сек) - 200 очков
-      </div>
-      <div class="upgrade" data-cost="500" data-increment="50">
-        Улучшение 5 (+50/сек) - 500 очков
-      </div>
-      <div class="upgrade" data-cost="1000" data-increment="100">
-        Улучшение 6 (+100/сек) - 1000 очков
-      </div>
-    </div>
-
-    <div class="customization">
-      <h2>Кастомизация кнопки</h2>
-      <div class="skins">
-        <div class="skin" data-cost="500" data-style="background: linear-gradient(45deg, #ff9a9e, #fad0c4);">
-          Скин 1 (Градиент) - 500 очков
-        </div>
-        <div class="skin" data-cost="1000" data-style="background: linear-gradient(45deg, #a1c4fd, #c2e9fb);">
-          Скин 2 (Градиент) - 1000 очков
-        </div>
-        <div class="skin" data-cost="1500" data-style="background: linear-gradient(45deg, #84fab0, #8fd3f4);">
-          Скин 3 (Градиент) - 1500 очков
-        </div>
-        <div class="skin" data-cost="2000" data-style="background: linear-gradient(45deg, #fbc2eb, #a6c1ee);">
-          Скин 4 (Градиент) - 2000 очков
-        </div>
-      </div>
-    </div>
-
-    <div class="leaderboard">
-      <h2>Рейтинг игроков</h2>
-      <ol id="leaderboard">
-        <li>Игрок 1: 0 очков</li>
-      </ol>
-    </div>
-  </div>
+  <!-- Подключаем Three.js и WebXR полифилл -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/webxr-polyfill@latest/build/webxr-polyfill.min.js"></script>
 
   <script>
-    // JavaScript-логика
-    let score = parseInt(localStorage.getItem('score')) || 0;
-    let autoIncrement = parseInt(localStorage.getItem('autoIncrement')) || 0;
-    const clickArea = document.getElementById('click-area');
-    const scoreElement = document.getElementById('score');
-    const leaderboardElement = document.getElementById('leaderboard');
-    const playerNameElement = document.getElementById('player-name');
+    // Инициализация сцены, камеры и рендерера
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById('ar-container').appendChild(renderer.domElement);
 
-    // Локальное хранилище для рейтинга
-    let leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [];
+    // Добавляем куб
+    const geometry = new THREE.BoxGeometry(1, 1, 1);
+    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    const cube = new THREE.Mesh(geometry, material);
+    cube.position.set(0, 0, -2); // Позиция куба
+    scene.add(cube);
 
-    // Загрузка данных игрока
-    let playerName = localStorage.getItem('playerName');
-    if (!playerName) {
-      playerName = prompt('Введите ваше имя:');
-      localStorage.setItem('playerName', playerName);
-    }
-    playerNameElement.textContent = playerName;
+    // Настройка WebXR
+    renderer.xr.enabled = true; // Включаем поддержку WebXR
+    const controller = renderer.xr.getController(0); // Получаем контроллер
+    scene.add(controller);
 
-    // Загрузка текущего скина
-    const currentSkin = localStorage.getItem('currentSkin');
-    if (currentSkin) {
-      clickArea.style = currentSkin;
-    }
-
-    // Обновление рейтинга
-    function updateLeaderboard() {
-      leaderboard.sort((a, b) => b.score - a.score);
-      leaderboardElement.innerHTML = leaderboard
-        .map((player, index) => `<li>${player.name}: ${player.score} очков</li>`)
-        .join('');
-    }
-
-    // Добавление или обновление игрока в рейтинге
-    function addToLeaderboard(name, score) {
-      const playerIndex = leaderboard.findIndex(player => player.name === name);
-
-      if (playerIndex !== -1) {
-        // Если игрок уже есть, обновляем его очки
-        leaderboard[playerIndex].score = score;
+    // Функция для запуска AR-сессии
+    async function startARSession() {
+      if (navigator.xr) {
+        const session = await navigator.xr.requestSession('immersive-ar', {
+          requiredFeatures: ['local'], // Используем ARCore/ARKit
+        });
+        renderer.xr.setSession(session);
       } else {
-        // Если игрока нет, добавляем нового
-        leaderboard.push({ name, score });
+        alert('Ваше устройство или браузер не поддерживают WebXR.');
       }
-
-      localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
-      updateLeaderboard();
     }
 
-    // Клик по области
-    clickArea.addEventListener('click', (event) => {
-      score++;
-      scoreElement.textContent = score;
-      localStorage.setItem('score', score);
-
-      // Анимация клика
-      const clickEffect = document.createElement('div');
-      clickEffect.classList.add('click-effect');
-      clickArea.appendChild(clickEffect);
-
-      setTimeout(() => {
-        clickEffect.remove();
-      }, 500);
+    // Запуск AR-сессии при клике
+    document.body.addEventListener('click', () => {
+      startARSession();
     });
 
-    // Покупка улучшений
-    document.querySelectorAll('.upgrade').forEach(upgrade => {
-      const cost = parseInt(upgrade.getAttribute('data-cost'));
-      if (localStorage.getItem(`upgrade-${cost}`)) {
-        upgrade.classList.add('upgrade-bought');
-      }
-
-      upgrade.addEventListener('click', () => {
-        const cost = parseInt(upgrade.getAttribute('data-cost'));
-        const increment = parseInt(upgrade.getAttribute('data-increment'));
-
-        if (score >= cost) {
-          score -= cost;
-          autoIncrement += increment;
-          scoreElement.textContent = score;
-          localStorage.setItem('score', score);
-          localStorage.setItem('autoIncrement', autoIncrement);
-          localStorage.setItem(`upgrade-${cost}`, true);
-
-          // Анимация покупки
-          const upgradeEffect = document.createElement('div');
-          upgradeEffect.classList.add('upgrade-effect');
-          upgrade.appendChild(upgradeEffect);
-
-          setTimeout(() => {
-            upgradeEffect.remove();
-          }, 500);
-
-          // Отключение улучшения после покупки
-          upgrade.classList.add('upgrade-bought');
-        } else {
-          alert('Недостаточно очков!');
-        }
-      });
-    });
-
-    // Покупка скинов
-    document.querySelectorAll('.skin').forEach(skin => {
-      const cost = parseInt(skin.getAttribute('data-cost'));
-      if (localStorage.getItem(`skin-${cost}`)) {
-        skin.classList.add('skin-bought');
-      }
-
-      skin.addEventListener('click', () => {
-        const cost = parseInt(skin.getAttribute('data-cost'));
-        const style = skin.getAttribute('data-style');
-
-        if (score >= cost) {
-          score -= cost;
-          scoreElement.textContent = score;
-          localStorage.setItem('score', score);
-          localStorage.setItem(`skin-${cost}`, true);
-          localStorage.setItem('currentSkin', style);
-
-          // Применение скина
-          clickArea.style = style;
-
-          // Отключение скина после покупки
-          skin.classList.add('skin-bought');
-        } else {
-          alert('Недостаточно очков!');
-        }
-      });
-    });
-
-    // Автоматическое увеличение очков
-    setInterval(() => {
-      score += autoIncrement;
-      scoreElement.textContent = score;
-      localStorage.setItem('score', score);
-    }, 1000);
-
-    // Добавление игрока в рейтинг при загрузке
-    addToLeaderboard(playerName, score);
-
-    // Обновление рейтинга каждые 5 секунд
-    setInterval(() => {
-      addToLeaderboard(playerName, score);
-    }, 5000);
-
-    // Загрузка сохранённых данных
-    scoreElement.textContent = score;
+    // Анимация
+    function animate() {
+      requestAnimationFrame(animate);
+      cube.rotation.x += 0.01;
+      cube.rotation.y += 0.01;
+      renderer.render(scene, camera);
+    }
+    animate();
   </script>
 </body>
 </html>
