@@ -4,20 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AR Cube</title>
-    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/ar.js@1.7.2/aframe-ar.min.js"></script>
-    <style>
-        body { margin: 0; overflow: hidden; }
-    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
-<body>
-    <a-scene embedded arjs>
-        <!-- Камера AR -->
-        <a-marker preset="hiro">
-            <!-- Белый куб -->
-            <a-box position="0 0.5 0" material="color: white;"></a-box>
-        </a-marker>
-        <a-entity camera></a-entity>
-    </a-scene>
+<body style="margin: 0; overflow: hidden;">
+    <button id="startAR" style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); padding: 10px 20px; font-size: 18px; z-index: 10;">Запустить AR</button>
+    
+    <script>
+        let scene, camera, renderer, cube;
+
+        async function initAR() {
+            if (navigator.xr && await navigator.xr.isSessionSupported('immersive-ar')) {
+                document.getElementById('startAR').style.display = 'none';
+
+                scene = new THREE.Scene();
+                camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
+                renderer = new THREE.WebGLRenderer({ alpha: true });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.xr.enabled = true;
+                document.body.appendChild(renderer.domElement);
+
+                // Добавляем белый куб
+                const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+                const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                cube = new THREE.Mesh(geometry, material);
+                cube.position.set(0, 0, -1); // Перед камерой
+                scene.add(cube);
+
+                // Запуск WebXR AR-сессии
+                const session = await navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['local-floor'] });
+                renderer.xr.setSession(session);
+
+                function animate() {
+                    renderer.setAnimationLoop(() => {
+                        cube.rotation.y += 0.01;
+                        renderer.render(scene, camera);
+                    });
+                }
+
+                animate();
+            } else {
+                alert('Ваше устройство не поддерживает WebXR');
+            }
+        }
+
+        document.getElementById('startAR').addEventListener('click', initAR);
+    </script>
 </body>
 </html>
